@@ -1,10 +1,9 @@
-import torch
-from torch import nn
+"""Define custom models.
+Refer to https://github.com/ray-project/ray/blob/master/rllib/models/torch/torch_modelv2.py
+"""
+
+from ray.rllib.models.torch.fcnet import FullyConnectedNetwork
 
 
-class TestModel(nn.Module):
-    def __init__(self) -> None:
-        super().__init__()
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return x
+class CustomModel(FullyConnectedNetwork):
+    pass

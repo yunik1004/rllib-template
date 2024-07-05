@@ -1,6 +1,6 @@
-# pytorch-template
+# rllib-template
 
-Template for PyTorch Projects
+Template for RLlib Projects
 
 ## Installation
 
