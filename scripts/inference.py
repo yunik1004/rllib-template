@@ -1,4 +1,4 @@
-"""Test script
+"""Inference script
 """
 
 import argparse
@@ -24,7 +24,7 @@ def main(args: argparse.Namespace) -> None:
         env = CustomEnv(render_mode="rgb_array")
         env = RecordVideo(env, args.output_dir)
 
-    agent = Algorithm.from_checkpoint(args.checkpoint)
+    agent = Algorithm.from_checkpoint(checkpoint=args.checkpoint)
 
     observation, info = env.reset(seed=args.seed)
     step = 0

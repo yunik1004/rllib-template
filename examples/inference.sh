@@ -6,6 +6,8 @@ SCRIPT_DIR=$(dirname $(dirname $(realpath "$0")))/"scripts"
 # Environment Setting
 set -x  # print the commands
 
+export CUDA_VISIBLE_DEVICES=0
+
 # Arguments
 CHECKPOINT=""
 OUTPUT_DIR="./ray_results"
