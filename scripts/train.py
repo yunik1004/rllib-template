@@ -5,9 +5,8 @@ If you want to use custom policy algorithm, refer to https://docs.ray.io/en/late
 import argparse
 import os
 import ray
-from ray import air
+from ray import air, tune
 from ray.rllib.algorithms.ppo import PPOConfig
-from ray.tune import Tuner
 from package_name.callbacks.test import CustomCallbacks
 from package_name.environments.test import CustomEnv
 from package_name.models.test import CustomModel
@@ -39,25 +38,34 @@ def main(args: argparse.Namespace) -> None:
                 "custom_model_config": {},
             },
             train_batch_size=args.batch_size,
+            sgd_minibatch_size=args.minibatch_size,
             lr=args.lr,
         )
+        .resources(num_gpus=args.num_gpus)
+        .env_runners(
+            num_env_runners=args.num_env_runners,
+            #    num_cpus_per_env_runner=1,
+            #    num_gpus_per_env_runner=1,
+        )
+        .learners(
+            num_learners=args.num_learners,
+            #    num_cpus_per_learner=1,
+            #    num_gpus_per_learner=1,
+        )
         .checkpointing(export_native_model_files=True)
+        .debugging(seed=args.seed)
     )
 
-    run_config = air.RunConfig(
+    tune.run(
+        run_or_experiment="PPO",
+        config=config,
         storage_path=args.log_dir,
         checkpoint_config=air.CheckpointConfig(
             checkpoint_frequency=args.checkpoint_freq,
         ),
         stop={"training_iteration": args.max_iters},
+        restore=args.checkpoint if args.checkpoint != "" else None,
     )
-
-    tuner = Tuner(
-        "PPO",
-        param_space=config.to_dict(),
-        run_config=run_config,
-    )
-    tuner.fit()
 
 
 def get_args() -> argparse.Namespace:
@@ -69,12 +77,18 @@ def get_args() -> argparse.Namespace:
         Arguments
     """
     parser = argparse.ArgumentParser("Train script")
-    parser.add_argument("--num_nodes", type=int, default=1, help="number of GPU nodes")
+    parser.add_argument("--num_gpus", type=int, default=0, help="number of GPUs")
     parser.add_argument(
-        "--checkpoint", type=str, default="", help="checkpoint of the model"
+        "--num_env_runners",
+        type=int,
+        default=0,
+        help="number of env runners for sampling",
     )
     parser.add_argument(
-        "--resume_train", action="store_true", help="resume training state"
+        "--num_learners", type=int, default=0, help="number of learners for training"
+    )
+    parser.add_argument(
+        "--checkpoint", type=str, default="", help="checkpoint of the model"
     )
     parser.add_argument("--log_dir", type=str, default="~/ray_results", help="log dir")
     parser.add_argument("--seed", type=int, default=0, help="random seed")
@@ -87,7 +101,7 @@ def get_args() -> argparse.Namespace:
     )
     parser.add_argument("--batch_size", type=int, default=512, help="batch size")
     parser.add_argument(
-        "--num_workers", type=int, default=0, help="number of workers for data loading"
+        "--minibatch_size", type=int, default=512, help="minibatch size"
     )
     return parser.parse_args()
 
