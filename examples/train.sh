@@ -9,9 +9,9 @@ set -x  # print the commands
 export CUDA_VISIBLE_DEVICES=0
 
 # Arguments
-NUM_GPUS=1
 NUM_ENV_RUNNERS=0
 NUM_LEARNERS=0
+NUM_GPUS_PER_LEARNER=1
 CHECKPOINT=""
 LOG_DIR="./ray_results"
 SEED=0
@@ -24,9 +24,9 @@ PY_ARGS=${@}  # Additional args
 
 # Run the script
 python ${SCRIPT_DIR}/"train.py" \
-    --num_gpus ${NUM_GPUS} \
     --num_env_runners ${NUM_ENV_RUNNERS} \
     --num_learners ${NUM_LEARNERS} \
+    --num_gpus_per_learner ${NUM_GPUS_PER_LEARNER} \
     --checkpoint "${CHECKPOINT}" \
     --log_dir "${LOG_DIR}" \
     --seed ${SEED} \

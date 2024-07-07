@@ -7,9 +7,10 @@ import os
 import ray
 from ray import air, tune
 from ray.rllib.algorithms.ppo import PPOConfig
+from ray.rllib.core.rl_module.rl_module import SingleAgentRLModuleSpec
 from package_name.callbacks.test import CustomCallbacks
 from package_name.environments.test import CustomEnv
-from package_name.models.test import CustomModel
+from package_name.models.test import CustomRLModule
 
 
 def main(args: argparse.Namespace) -> None:
@@ -26,22 +27,10 @@ def main(args: argparse.Namespace) -> None:
         PPOConfig()
         .framework(framework="torch")
         .environment(env=CustomEnv)
-        # .api_stack(
-        #    enable_rl_module_and_learner=True,
-        #    enable_env_runner_and_connector_v2=True,
-        # )
-        .callbacks(callbacks_class=CustomCallbacks)
-        .training(
-            model={
-                # "uses_new_env_runners": True,
-                "custom_model": CustomModel,
-                "custom_model_config": {},
-            },
-            train_batch_size=args.batch_size,
-            sgd_minibatch_size=args.minibatch_size,
-            lr=args.lr,
+        .api_stack(
+            enable_rl_module_and_learner=True,
+            enable_env_runner_and_connector_v2=True,
         )
-        .resources(num_gpus=args.num_gpus)
         .env_runners(
             num_env_runners=args.num_env_runners,
             #    num_cpus_per_env_runner=1,
@@ -50,10 +39,24 @@ def main(args: argparse.Namespace) -> None:
         .learners(
             num_learners=args.num_learners,
             #    num_cpus_per_learner=1,
-            #    num_gpus_per_learner=1,
+            num_gpus_per_learner=args.num_gpus_per_learner,
         )
         .checkpointing(export_native_model_files=True)
         .debugging(seed=args.seed)
+        .callbacks(callbacks_class=CustomCallbacks)
+        .rl_module(
+            rl_module_spec=SingleAgentRLModuleSpec(
+                module_class=CustomRLModule,
+            ),
+        )
+        .training(
+            model={
+                "uses_new_env_runners": True,
+            },
+            train_batch_size=args.batch_size,
+            sgd_minibatch_size=args.minibatch_size,
+            lr=args.lr,
+        )
     )
 
     tune.run(
@@ -77,7 +80,6 @@ def get_args() -> argparse.Namespace:
         Arguments
     """
     parser = argparse.ArgumentParser("Train script")
-    parser.add_argument("--num_gpus", type=int, default=0, help="number of GPUs")
     parser.add_argument(
         "--num_env_runners",
         type=int,
@@ -88,7 +90,10 @@ def get_args() -> argparse.Namespace:
         "--num_learners", type=int, default=0, help="number of learners for training"
     )
     parser.add_argument(
-        "--checkpoint", type=str, default="", help="checkpoint of the model"
+        "--num_gpus_per_learner", type=int, default=0, help="number of GPUs per learner"
+    )
+    parser.add_argument(
+        "--checkpoint", type=str, default="", help="checkpoint of the experiment runner"
     )
     parser.add_argument("--log_dir", type=str, default="~/ray_results", help="log dir")
     parser.add_argument("--seed", type=int, default=0, help="random seed")

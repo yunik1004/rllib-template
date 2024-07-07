@@ -2,8 +2,8 @@
 Refer to https://github.com/ray-project/ray/blob/master/rllib/models/torch/torch_modelv2.py
 """
 
-from ray.rllib.models.torch.fcnet import FullyConnectedNetwork
+from ray.rllib.algorithms.ppo.torch.ppo_torch_rl_module import PPOTorchRLModule
 
 
-class CustomModel(FullyConnectedNetwork):
+class CustomRLModule(PPOTorchRLModule):
     pass
