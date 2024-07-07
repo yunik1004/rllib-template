@@ -1,16 +1,20 @@
-"""Train script.
-If you want to use custom policy algorithm, refer to https://docs.ray.io/en/latest/rllib/rllib-concepts.html
+"""Train script
 """
 
 import argparse
 import os
 import ray
 from ray import air, tune
-from ray.rllib.algorithms.ppo import PPOConfig
+from ray.rllib.algorithms.ppo import PPO, PPOConfig
+from ray.rllib.algorithms.ppo.torch.ppo_torch_learner import PPOTorchLearner
 from ray.rllib.core.rl_module.rl_module import SingleAgentRLModuleSpec
 from package_name.callbacks.test import CustomCallbacks
 from package_name.environments.test import CustomEnv
 from package_name.models.test import CustomRLModule
+
+
+class CustomLearner(PPOTorchLearner):
+    pass
 
 
 def main(args: argparse.Namespace) -> None:
@@ -56,11 +60,12 @@ def main(args: argparse.Namespace) -> None:
             train_batch_size=args.batch_size,
             sgd_minibatch_size=args.minibatch_size,
             lr=args.lr,
+            learner_class=CustomLearner,
         )
     )
 
     tune.run(
-        run_or_experiment="PPO",
+        run_or_experiment=PPO,
         config=config,
         storage_path=args.log_dir,
         checkpoint_config=air.CheckpointConfig(
